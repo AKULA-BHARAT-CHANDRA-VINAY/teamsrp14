@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Options</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+
+        header {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .container {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .option {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            margin: 5px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #item-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+        }
+
+        #item-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+        }
+
+        .item-name, .item-cost {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            margin: 0 5px;
+        }
+
+        .remove-button {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #total-cost {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #barcodeScannerBtn {
+            width: 50px;
+            height: 50px;
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+        }
+
+        #barcodeScannerBtn img {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Media query for mobile devices */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .option {
+                width: 100%;
+                height: 50px;
+                margin-bottom: 10px;
+            }
+
+            #paymentBtn {
+                width: 75%;
+                height: 50px;
+                position: fixed;
+                bottom: 10px;
+                left: 10px;
+            }
+
+            #barcodeScannerBtn {
+                width: 50px;
+                height: 50px;
+                position: fixed;
+                bottom: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@0.0.6/dist/quagga.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1 class="welcome">Shopping Options</h1>
+    </header>
+    <main>
+        <div class="container">
+            <ul id="item-list"></ul>
+            <div id="total-cost">Total Cost: $0</div>
+            <button id="paymentBtn" class="option" onclick="navigateToShopping()" style="width: 75%; height: 50px; position: fixed; bottom: 10px; left: 10px;">Payment</button>
+            <button id="barcodeScannerBtn" style="width: 50px; height: 50px; position: fixed; bottom: 10px; right: 10px;">
+                <img src="scanner.jpeg" alt="Scan" style="width: 100%; height: 100%;">
+            </button>
+        </div>
+        <div id="camera-view-container" style="display:none; align-items: center;">
+            <h2>Scan Barcode</h2>
+            <div id="interactive" class="viewport">
+                <button onclick="stopBarcodeScanner()">Tap to Stop Scanning</button>
+            </div>
+        </div>
+    </main>
+    <script>
+        function getRandomCode() {
+            const codes = [
+                "9781234567897",
+                "2345678",
+                "123489",
+                "123456789",
+                "12245888"
+            ];
+            const randomIndex = Math.floor(Math.random() * codes.length); 
+            return codes[randomIndex];
+        }
+        
+        document.getElementById('barcodeScannerBtn').addEventListener('click', startBarcodeScanner);
+
+        let totalCost = 0;
+
+        function startBarcodeScanner() {
+            document.getElementById('camera-view-container').style.display = 'block';
+
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector('#interactive'),
+                    constraints: {
+                        width: 540,
+                        height: 480,
+                        facingMode: "environment"  // Use rear camera
+                    }
+                },
+                decoder: {
+                    readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "code_39_vin_reader", "codabar_reader", "upc_reader", "upc_e_reader", "i2of5_reader"]
+                },
+                locate: true  // Enable locating
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                    alert('Failed to initialize barcode scanner.');
+                    return;
+                }
+                console.log("Initialization finished. Ready to start");
+                Quagga.start();
+            });
+
+            Quagga.onDetected(async function(result) {
+                const code = result.codeResult.code;
+                alert("Barcode detected: " + code);
+                const productDetails = await fetchProductDetails(code);
+                addToItemList(productDetails.name, productDetails.cost);
+                stopBarcodeScanner();
+            });
+        }
+
+        function stopBarcodeScanner() {
+            Quagga.stop();
+            document.getElementById('camera-view-container').style.display = 'none';
+        }
+
+        async function fetchProductDetails(barcode) {
+            console.log(`Fetching product details for barcode: ${barcode}`);
+            const response = await fetch('http://127.0.0.1:5000/scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 'barcode': barcode }),
+            });
+            if (!response.ok) {
+                alert('Network response was not ok');
+                return { name: 'Unknown Product', cost: 0 };
+            } else {
+                const data = await response.json();
+                console.log(`Product details fetched: ${JSON.stringify(data)}`);
+                return data;
+            }
+        }
+
+        function addToItemList(name, cost) {
+            if (cost !== 0) {
+                const itemList = document.getElementById('item-list');
+                const newItem = document.createElement('li');
+
+                const itemName = document.createElement('div');
+                itemName.className = 'item-name';
+                itemName.textContent = name;
+
+                const itemCost = document.createElement('div');
+                itemCost.className = 'item-cost';
+                itemCost.textContent = `$${cost}`;
+
+                const removeButton = document.createElement('button');
+                removeButton.className = 'remove-button';
+                removeButton.textContent = 'Remove';
+                removeButton.onclick = function() {
+                    itemList.removeChild(newItem);
+                    totalCost -= cost;
+                    updateTotalCost();
+                };
+
+                newItem.appendChild(itemName);
+                newItem.appendChild(itemCost);
+                newItem.appendChild(removeButton);
+                itemList.appendChild(newItem);
+
+                totalCost += cost;
+                updateTotalCost();
+            } else {
+                alert("Wrong product detected");
+            }
+        }
+
+        function updateTotalCost() {
+            document.getElementById('total-cost').textContent = `Total Cost: $${totalCost}`;
+        }
+
+        function navigateToShopping() {
+            window.location.href = 'payment.html';
+        }
+    </script>
+</body>
+</html>

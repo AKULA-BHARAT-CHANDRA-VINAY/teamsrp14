@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Revolution</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+}
+
+header {
+    background-color: #4cae4c;
+    color: white;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.menu-icon {
+    font-size: 30px;
+    cursor: pointer;
+    margin-right: 20px;
+}
+
+.welcome {
+    font-family: 'Times New Roman', Times, serif;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.sidebar {
+    height: 100%;
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: -250px;
+    background-color: #4cae4c;
+    overflow-x: hidden;
+    transition: 0.3s;
+    padding-top: 60px;
+}
+
+.sidebar a {
+    padding: 10px 15px;
+    text-decoration: none;
+    font-size: 18px;
+    color: white;
+    display: block;
+    transition: 0.3s;
+}
+
+.sidebar a:hover {
+    background-color: #575757;
+}
+
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    margin: auto;
+    margin-top: 50px;
+    animation: fadeIn 1s ease-in-out;
+}
+
+.options {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.option {
+    background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_BJGEgD9lJ6j0UzFweUXJI1Irp7b-CPNa4_Q_qTxfEyXsb8GyxUQ8z1tlSrEurCnQZCQ&usqp=CAU');
+    background-color: #4cae4c;
+    size: 0cap;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.option:hover {
+    background-color: #3b9b3b;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.sidebar.open {
+    left: 0 !important;
+}
+
+    </style>
+    <script>
+        function toggleMenu() {
+    var sidebar = document.getElementById("sidebar");
+    if (sidebar.style.left === "0px") {
+        sidebar.style.left = "-250px";
+        document.removeEventListener('click', closeSidebarOnClickOutside);
+    } else {
+        sidebar.style.left = "0";
+        setTimeout(() => {
+            document.addEventListener('click', closeSidebarOnClickOutside);
+        }, 100);
+    }
+}
+
+function closeSidebarOnClickOutside(event) {
+    var sidebar = document.getElementById("sidebar");
+    if (!sidebar.contains(event.target) && event.target.className !== 'menu-icon') {
+        sidebar.style.left = "-250px";
+        document.removeEventListener('click', closeSidebarOnClickOutside);
+    }
+}
+
+function navigateToShopping() {
+    window.location.href = 'shopping-page.html';
+}
+
+    </script>
+</head>
+<body>
+    <header>
+        <div class="menu-icon" onclick="toggleMenu()">&#9776;</div>
+        <h1 class="welcome">Welcome to the Shopping Revolution</h1>
+    </header>
+    <nav id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="#">Profile</a></li>
+            <li><a href="#">My List</a></li>
+            <li><a href="#">Settings</a></li>
+            <li><a href="#">Credits and Debits</a></li>
+            <li><a href="#">Rating</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Help</a></li>
+            <li><a href="#">Logout</a></li>
+        </ul>
+    </nav>
+    <main>
+        <div class="container">
+            <h2>Main Options</h2>
+            <div class="options">
+                <div class="option" onclick=navigateToShopping()>shopping</div>
+                <div class="option" onclick="alert('Discounts Selected!')">Discounts</div>
+                <div class="option" onclick="alert('Rewards Selected!')">Rewards</div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

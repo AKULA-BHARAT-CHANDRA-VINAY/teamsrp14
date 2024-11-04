@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OTP in JS</title>
+    <link rel="stylesheet" href="forgot.css">
+    <script src="https://smtpjs.com/v3/smtp.js"></script>
+</head>
+<body>
+    <div class="form" id="otp_container">
+        <h1>OTP from smartcart</h1>
+        <input type="email" id="email" placeholder="Enter Email..." required>
+        <div class="otpverify" style="display: none;">
+            <input type="text" id="otp_inp" placeholder="Enter the OTP sent to your Email..." required>
+            <button class="btn" id="otp-btn">Verify</button>
+        </div>
+        <button class="btn" id="send-otp-btn">Send OTP</button>
+    </div>
+    <div class="from" id='resetcontainer'style="display: none;">
+        <h1>Password reseting</h1>
+        <input type="text" id="newpword" placeholder="Enter password..." required>
+        <input type="text" id="cnewpword" placeholder="Enter Conform...." required>
+        <button class="btn" id="pword">Reset</button>
+    </div>
+    <script>
+        let otp_val; // Declare otp_val in the outer scope
+
+        async function sendOTP() {
+            const email = document.getElementById('email').value; // Get email value
+            const otpverify = document.getElementsByClassName('otpverify')[0];
+
+            otp_val = Math.floor(Math.random() * 10000); // Generate OTP
+            const data = {
+                'email': email,
+                'otp_val': otp_val
+            };
+			console.log(email,otp_val);
+            try {
+                const response = await fetch('http://localhost:5000/otp_verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert("OTP Sent");
+                    otpverify.style.display = "flex"; // Show OTP input after sending
+                } else {
+                    alert('Error in OTP sending. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error occurred during sending OTP');
+            }
+        }
+
+        document.getElementById('send-otp-btn').addEventListener('click', sendOTP); // Add event listener here
+
+        document.getElementById('otp-btn').addEventListener('click', async function(event) {
+        event.preventDefault(); // Prevent form submission
+            const email = document.getElementById('email').value;
+            const otp_inp = document.getElementById('otp_inp').value; // Get OTP input value
+            if (otp_inp == otp_val) {
+                alert("Email address verified...");
+                document.getElementById('otp_container').style.display = 'none';
+                document.getElementById('resetcontainer').style.display = 'block';
+                newpword=document.getElementById('newpword').value
+                cnewpword=document.getElementById('cnewpword').value
+                if (cnewpword==newpword){
+                    try {
+                const response = await fetch('http://localhost:5000/password_reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({'nwepword':pword,'email':email})
+                });
+
+                if (response.ok) {
+                    alert("password reseted");
+                    window.location.href = 'index.html';// Show OTP input after sending
+                } else {
+                    alert('not able reset password');
+                }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error in password reseting');
+                }
+                }
+                else{
+                    alert("confirm password dont match")
+                } // Redirect on successful verification
+            } else {
+                alert("Invalid OTP");
+            }
+        });
+    </script>
+</body>
+</html>
